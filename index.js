@@ -72,7 +72,8 @@ fsPromises.rm('./output', {recursive: true}).then(() => {
 
       if (isHat) {
         hats.forEach(fileName => {
-            let file = readJsonFile('Hats/' + fileName, 'hat.json');
+            fileName = 'Hats/' + fileName
+            let file = readJsonFile(fileName, 'hat.json');
         if (!file.Name) {
           throw new Error("json file invalid");
         }
@@ -124,8 +125,9 @@ fsPromises.rm('./output', {recursive: true}).then(() => {
         // ===================================================================
       if (isShirt) {
         shirts.forEach(fileName => {
+            fileName = 'Shirts/' + fileName
             
-            let file = readJsonFile('Shirts/' + fileName, 'shirt.json');
+            let file = readJsonFile(fileName, 'shirt.json');
         if (!file.Name) {
           throw new Error(`json file "${fileName}/shirt.json" invalid`);
         }
