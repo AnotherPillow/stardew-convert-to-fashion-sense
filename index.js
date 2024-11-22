@@ -1,7 +1,6 @@
 const fsPromises = require('fs').promises;
 const loadJson5File = require('read-json5-file');
 const _ = require('lodash');
-const jsonFile = require('jsonfile')
 const path = require('path');
 const jimp = require('jimp')
 
