@@ -1,4 +1,5 @@
 const fsPromises = require('fs').promises;
+const fs = require('fs');
 const loadJson5File = require('read-json5-file');
 const _ = require('lodash');
 const path = require('path');
@@ -24,10 +25,12 @@ fsPromises.rm('./output', {recursive: true}).then(() => {
   fsPromises.mkdir('./output').then(async () => {
     if (await checkFileExistsSync('./input/hairstyles.png')) await autoSplitHairstyles()
     fsPromises.readdir('./input').then((fileNames) => {
-        let isColorable = false;
-        if (options.isColorable) {
-            isColorable = options.isColorable;
-        }
+      const hats = fileNames.includes('Hats') ? fs.readdirSync('./input/Hats') : []
+      const shirts = fileNames.includes('Shirts') ? fs.readdirSync('./input/Shirts') : []
+      let isColorable = false;
+      if (options.isColorable) {
+        isColorable = options.isColorable;
+      }
 
       // toggle the type of conversion you're performing today
       let isHair = false;
@@ -63,119 +66,129 @@ fsPromises.rm('./output', {recursive: true}).then(() => {
           }
         }
       }
-
-
-      fileNames.forEach((fileName) => {
-        // ===================================================================
+// ===================================================================
         //                      H A T S
         // ===================================================================
-        if (isHat) {
-          let file = readJsonFile(fileName, 'hat.json');
-          if (!file.Name) {
-            throw new Error("json file invalid");
-          }
-          let hatObject = _.cloneDeep(HAT_TEMPLATE);
 
-          hatObject["Name"] = file.Name;
-          if (options.authorName) {
-            hatObject["Name"] = `${options.authorName}'s '` + hatObject["Name"];
-          }
-          if (!options.authorName && options.prefix) {
-            hatObject["Name"] = `${options.prefix} '` + hatObject["Name"];
-          }
-          //hatObject["Name"] = "Author's " + shirtObject["Name"];
-
-          if (file.ShowHair == false) {
-            hatObject["FrontHat"]["HideHair"] = true;
-            hatObject["RightHat"]["HideHair"] = true;
-            hatObject["LeftHat"]["HideHair"] = true;
-            hatObject["BackHat"]["HideHair"] = true;
-          }
-
-          fsPromises.mkdir(`./output/${fileName}/`).then(() => {
-            // write json
-            fsPromises.writeFile(`./output/${fileName}/hat.json`, JSON.stringify(hatObject, null, "\t")).then(() => {
-              console.log('hat.json created for ' + fileName);
-            }).catch((e) => {
-              console.log('failed to create hat.json for ' + fileName);
-              console.log(e);
-            });
-
-            // copy image over
-            fsPromises.copyFile(`./input/${fileName}/hat.png`, `./output/${fileName}/hat.png`).then(() => {
-              console.log('hat.png copied over for ' + fileName);
-            }).catch((e) => {
-              console.log('failed to copy hat.png for ' + fileName);
-              console.log(e);
-            });
-          }).catch((exception) => {
-            console.log(`failed to create directory for ${fileName}`);
-          });
+      if (isHat) {
+        hats.forEach(fileName => {
+            let file = readJsonFile(fileName, 'hat.json');
+        if (!file.Name) {
+          throw new Error("json file invalid");
         }
+        let hatObject = _.cloneDeep(HAT_TEMPLATE);
+
+        hatObject["Name"] = file.Name;
+        if (options.authorName) {
+          hatObject["Name"] = `${options.authorName}'s '` + hatObject["Name"];
+        }
+        if (!options.authorName && options.prefix) {
+          hatObject["Name"] = `${options.prefix} '` + hatObject["Name"];
+        }
+        //hatObject["Name"] = "Author's " + shirtObject["Name"];
+
+        if (file.ShowHair == false) {
+          hatObject["FrontHat"]["HideHair"] = true;
+          hatObject["RightHat"]["HideHair"] = true;
+          hatObject["LeftHat"]["HideHair"] = true;
+          hatObject["BackHat"]["HideHair"] = true;
+        }
+
+        fsPromises.mkdir(`./output/${fileName}/`).then(() => {
+          // write json
+          fsPromises.writeFile(`./output/${fileName}/hat.json`, JSON.stringify(hatObject, null, "\t")).then(() => {
+            console.log('hat.json created for ' + fileName);
+          }).catch((e) => {
+            console.log('failed to create hat.json for ' + fileName);
+            console.log(e);
+          });
+
+          // copy image over
+          fsPromises.copyFile(`./input/${fileName}/hat.png`, `./output/${fileName}/hat.png`).then(() => {
+            console.log('hat.png copied over for ' + fileName);
+          }).catch((e) => {
+            console.log('failed to copy hat.png for ' + fileName);
+            console.log(e);
+          });
+        }).catch((exception) => {
+          console.log(`failed to create directory for ${fileName}`);
+        });
+        })
+      }
+
+      
+        
 
         // ===================================================================
         //                    S H I R T S
         // ===================================================================
-        if (isShirt) {
-          let file = readJsonFile(fileName, 'shirt.json');
-          if (!file.Name) {
-            throw new Error(`json file "${fileName}/shirt.json" invalid`);
-          }
-          isColorable = Boolean(file.Dyeable);
-          let shirtObject = _.cloneDeep(isColorable ? COLORABLE_SHIRT : NON_COLORABLE_SHIRT);
+      if (isShirt) {
+        shirts.forEach(fileName => {
+            let file = readJsonFile(fileName, 'shirt.json');
+        if (!file.Name) {
+          throw new Error(`json file "${fileName}/shirt.json" invalid`);
+        }
+        isColorable = Boolean(file.Dyeable);
+        let shirtObject = _.cloneDeep(isColorable ? COLORABLE_SHIRT : NON_COLORABLE_SHIRT);
 
 
-          shirtObject["Name"] = file.Name;
-          if (options.authorName) {
-            shirtObject["Name"] = `${options.authorName}'s ${options.hasSleeves ? '' : 'Summer '}Shirt ` + shirtObject["Name"];
-          }
-          if (!options.authorName && options.prefix) {
-            shirtObject["Name"] = `${options.prefix} '` + shirtObject["Name"];
-          }
-          //shirtObject["Name"] = "Author's " + shirtObject["Name"];
-          if  (isColorable) {
-            shirtObject["Name"] += " (Dyeable)";
-          }
+        shirtObject["Name"] = file.Name;
+        if (options.authorName) {
+          shirtObject["Name"] = `${options.authorName}'s ${options.hasSleeves ? '' : 'Summer '}Shirt ` + shirtObject["Name"];
+        }
+        if (!options.authorName && options.prefix) {
+          shirtObject["Name"] = `${options.prefix} '` + shirtObject["Name"];
+        }
+        //shirtObject["Name"] = "Author's " + shirtObject["Name"];
+        if  (isColorable) {
+          shirtObject["Name"] += " (Dyeable)";
+        }
 
-          const shirtModelArray = ['BackShirt', 'FrontShirt', 'LeftShirt', 'RightShirt'];
+        const shirtModelArray = ['BackShirt', 'FrontShirt', 'LeftShirt', 'RightShirt'];
 
-          if (options.hasSleeves == false) {
-            shirtModelArray.forEach((shirtModel) => {
-              delete shirtObject[shirtModel].SleeveColors;
-            })
-          }
+        if (options.hasSleeves == false) {
+          shirtModelArray.forEach((shirtModel) => {
+            delete shirtObject[shirtModel].SleeveColors;
+          })
+        }
 
-          fsPromises.mkdir(`./output/${fileName}/`).then(() => {
-            // --write json--
-            fsPromises.writeFile(`./output/${fileName}/shirt.json`, JSON.stringify(shirtObject, null, "\t")).then(() => {
-              console.log('shirt.json created for ' + fileName);
+        
+        fsPromises.mkdir(`./output/${fileName}/`).then(() => {
+          // --write json--
+          fsPromises.writeFile(`./output/${fileName}/shirt.json`, JSON.stringify(shirtObject, null, "\t")).then(() => {
+            console.log('shirt.json created for ' + fileName);
+          }).catch((e) => {
+            console.log('failed to create shirt.json for ' + fileName);
+            console.log(e);
+          });
+
+          // --copy image over--
+          // default to female version because most don't have a difference
+          // and I usually play as a female character ;P
+          if (file.HasFemaleVariant) {
+            fsPromises.copyFile(`./input/${fileName}/female.png`, `./output/${fileName}/shirt.png`).then(() => {
+              console.log('female.png copied over for ' + fileName);
             }).catch((e) => {
-              console.log('failed to create shirt.json for ' + fileName);
+              console.log('failed to copy female.png for ' + fileName);
               console.log(e);
             });
+          } else {
+            fsPromises.copyFile(`./input/${fileName}/male.png`, `./output/${fileName}/shirt.png`).then(() => {
+              console.log('male.png copied over for ' + fileName);
+            }).catch((e) => {
+              console.log('failed to copy male.png for ' + fileName);
+              console.log(e);
+            });
+          }
+        }).catch((exception) => {
+          console.log(`failed to create directory for ${fileName}`);
+        });
+        })
+      }
 
-            // --copy image over--
-            // default to female version because most don't have a difference
-            // and I usually play as a female character ;P
-            if (file.HasFemaleVariant) {
-              fsPromises.copyFile(`./input/${fileName}/female.png`, `./output/${fileName}/shirt.png`).then(() => {
-                console.log('female.png copied over for ' + fileName);
-              }).catch((e) => {
-                console.log('failed to copy female.png for ' + fileName);
-                console.log(e);
-              });
-            } else {
-              fsPromises.copyFile(`./input/${fileName}/male.png`, `./output/${fileName}/shirt.png`).then(() => {
-                console.log('male.png copied over for ' + fileName);
-              }).catch((e) => {
-                console.log('failed to copy male.png for ' + fileName);
-                console.log(e);
-              });
-            }
-          }).catch((exception) => {
-            console.log(`failed to create directory for ${fileName}`);
-          });
-        }
+      fileNames.forEach((fileName) => {
+        
+        
         // ===================================================================
         //                              H A I R
         // ===================================================================
